@@ -1,0 +1,23 @@
+[Unit]
+Description=EventSnap Infisical Webhook Agent
+After=network.target
+
+[Service]
+User=eventsnap
+Group=eventsnap
+WorkingDirectory=/home/eventsnap/ops
+
+# Ensure systemd can find the 'uv' command
+Environment="PATH=/home/eventsnap/.cargo/bin:/home/eventsnap/.local/bin:/usr/local/bin:/usr/bin:/bin"
+
+ExecStart=/usr/bin/env uv run main.py
+
+# Automatically restart if it crashes
+Restart=always
+RestartSec=5
+
+# Ensure output is sent to journalctl without delay
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

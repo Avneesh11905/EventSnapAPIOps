@@ -1,0 +1,12 @@
+[project]
+name = "server-restart-webhook"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "dotenv>=0.9.9",
+    "fastapi==0.110.0",
+    "pydantic-settings>=2.15.0",
+    "uvicorn==0.27.1",
+]
