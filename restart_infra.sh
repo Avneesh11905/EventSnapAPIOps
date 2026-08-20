@@ -19,4 +19,8 @@ echo "✅ Secrets updated! Restarting all backend Docker containers in /app..."
 cd /app
 sudo docker compose up -d --force-recreate
 
+# 4. Reload Nginx so it resolves the new internal Docker IPs of the recreated backend containers
+echo "🔄 Reloading Nginx to re-resolve backend IPs..."
+sudo docker exec eventsnap_nginx nginx -s reload
+
 echo "🚀 Infrastructure update and restart complete!"
