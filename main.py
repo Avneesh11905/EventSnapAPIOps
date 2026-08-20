@@ -16,13 +16,10 @@ async def handle_webhook(
     if token != settings.OPS_WEBHOOK_TOKEN:
         raise HTTPException(status_code=403, detail="Invalid token")
     
-    secret_path = payload.project.secretPath if payload.project else "/"
-    needs_gcp_restart = (secret_path == "/GCP_TOKEN")
-    
     # Queue the restart in the state machine
-    restart_manager.queue_restart(needs_gcp_restart)
+    restart_manager.queue_restart()
     
-    return InfisicalWebhookResponse(gcp_restarted_queued=needs_gcp_restart)
+    return InfisicalWebhookResponse()
 
 if __name__ == "__main__":
     import uvicorn
