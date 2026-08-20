@@ -15,9 +15,18 @@ infisical export --projectId="$INFISICAL_PROJECT_ID" --env=prod --format=dotenv 
 echo "✅ Secrets updated! Restarting all backend Docker containers in /app..."
 
 # 3. Restart Docker containers to pick up the new .env file
-# We use --force-recreate to guarantee they pick up the new .env
+# We dynamically preserve the current scale of any scaled services (like celery workers).
 cd /app
-sudo docker compose up -d --force-recreate
+SCALE_ARGS=""
+for SERVICE in $(sudo docker compose config --services); do
+    COUNT=$(sudo docker compose ps -q $SERVICE | wc -l)
+    if [ "$COUNT" -gt 1 ]; then
+        SCALE_ARGS="$SCALE_ARGS --scale $SERVICE=$COUNT"
+        echo "Preserving scale for $SERVICE: $COUNT replicas"
+    fi
+done
+
+sudo docker compose up -d --force-recreate $SCALE_ARGS
 
 # 4. Reload Nginx so it resolves the new internal Docker IPs of the recreated backend containers
 echo "🔄 Reloading Nginx to re-resolve backend IPs..."
