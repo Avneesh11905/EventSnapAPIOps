@@ -1,0 +1,61 @@
+name: Deploy Webhook
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Prepare VM Directories
+        uses: appleboy/ssh-action@v1.2.3
+        with:
+          host: ${{ secrets.GCP_VM_IP }}
+          username: github-actions
+          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+          script: |
+            sudo mkdir -p /webhook
+            sudo chown -R github-actions:github-actions /webhook
+
+      - name: Copy code to VM
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.GCP_VM_IP }}
+          username: github-actions
+          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+          source: "*,!.git/,!.venv/"
+          target: "/webhook"
+          strip_components: 0
+
+      - name: Install dependencies and restart service
+        uses: appleboy/ssh-action@v1.2.3
+        with:
+          host: ${{ secrets.GCP_VM_IP }}
+          username: github-actions
+          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+          script: |
+            cd /webhook
+            
+            # Install uv if it doesn't exist
+            if ! command -v uv &> /dev/null; then
+              curl -LsSf https://astral.sh/uv/install.sh | sh
+              source $HOME/.local/bin/env
+            fi
+            
+            # Sync python dependencies
+            /home/github-actions/.local/bin/uv sync
+
+            # Move systemd service file to system path
+            sudo mv eventsnap-webhook.service /etc/systemd/system/eventsnap-webhook.service
+            
+            # Reload systemd and restart service
+            sudo systemctl daemon-reload
+            sudo systemctl enable eventsnap-webhook.service
+            sudo systemctl restart eventsnap-webhook.service
+            sudo systemctl status eventsnap-webhook.service --no-pager

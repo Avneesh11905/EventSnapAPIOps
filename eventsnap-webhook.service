@@ -3,12 +3,12 @@ Description=EventSnap Infisical Webhook Agent
 After=network.target
 
 [Service]
-User=eventsnap
-Group=eventsnap
-WorkingDirectory=/home/eventsnap/ops
+User=github-actions
+Group=github-actions
+WorkingDirectory=/webhook
 
 # Ensure systemd can find the 'uv' command
-Environment="PATH=/home/eventsnap/.cargo/bin:/home/eventsnap/.local/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PATH=/home/github-actions/.cargo/bin:/home/github-actions/.local/bin:/usr/local/bin:/usr/bin:/bin"
 
 ExecStart=/usr/bin/env uv run main.py
 
